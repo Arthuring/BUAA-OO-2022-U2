@@ -60,6 +60,7 @@ public class Dispatcher {
             requests.add(request);
             RequestList requestList = new RequestList(requests);
             addPersonRequest(requestList);
+            System.out.println(requestList);
         } else {
             int distant = 22;
             for (int i = 1; i < 11; i++) {
@@ -87,6 +88,7 @@ public class Dispatcher {
             }
             RequestList requestList = new RequestList(requests);
             addPersonRequest(requestList);
+            System.out.println(requestList);
         }
     }
 
