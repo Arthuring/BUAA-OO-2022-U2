@@ -366,7 +366,7 @@ public class Elevator extends Thread {
                 try {
                     status.handle(this, this.target);
                 } catch (InterruptedException e) {
-                    //System.out.println("Elevator" + this.id + " End");
+                    System.out.println("Elevator" + this.id + " End");
                     //outPutStream.setEnd();
                     break;
                 }

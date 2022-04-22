@@ -9,7 +9,6 @@ import java.util.Map;
 public class PersonQueueHorizontal extends PersonQueue {
     private final List<RequestList> personRequests;//乘侯表？
     private final Map<Building, List<RequestList>> requestPerBuilding = new HashMap<>();
-    //<floor, Queue>
     private boolean end = false;
 
     PersonQueueHorizontal() {
@@ -33,7 +32,7 @@ public class PersonQueueHorizontal extends PersonQueue {
         notifyAll();
     }
 
-    public boolean containReachable(HashSet<Position> reachable) {
+    public synchronized boolean containReachable(HashSet<Position> reachable) {
         if (personRequests.isEmpty()) {
             return false;
         }
