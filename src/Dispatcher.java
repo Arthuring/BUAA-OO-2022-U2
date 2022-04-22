@@ -13,7 +13,7 @@ public class Dispatcher {
     private final Map<String, PersonQueue> personQueueListBuilding = new HashMap<>();//乘侯表
     private final Map<Integer, PersonQueue> personQueueListFloor = new HashMap<>();
     private List<Elevator> elevators = new ArrayList<>();
-    private final HashMap<Integer, ArrayList<Elevator>> hElevatorFloor = new HashMap<>();
+    private final HashMap<Integer, ArrayList<Elevator>> horiElevatorFloor = new HashMap<>();
     //private Set<PersonRequest> requestSet = new HashSet<>();//来的请求
     private boolean end = false;
 
@@ -33,14 +33,14 @@ public class Dispatcher {
         }
         for (int i = 1; i < 11; i++) {
             ArrayList<Elevator> arrayList = new ArrayList<>();
-            hElevatorFloor.put(i, arrayList);
+            horiElevatorFloor.put(i, arrayList);
         }
     }
 
     public boolean canReachInFloor(Integer floor, Building fromBuilding, Building toBuilding) {
         Position from = new Position(fromBuilding, floor);
         Position to = new Position(toBuilding, floor);
-        for (Elevator elevator : hElevatorFloor.get(floor)) {
+        for (Elevator elevator : horiElevatorFloor.get(floor)) {
             HashSet<Position> reachable = elevator.getReachablePostion();
             if (reachable.contains(from) && reachable.contains(to)) {
                 return true;
@@ -120,7 +120,7 @@ public class Dispatcher {
                     personQueueListFloor
                             .get(request.getFloor()), request);
             elevators.add(elevator);
-            hElevatorFloor.get(elevator.getCurrentPosition().getFloor()).add(elevator);
+            horiElevatorFloor.get(elevator.getCurrentPosition().getFloor()).add(elevator);
             elevator.start();
         }
     }
@@ -144,7 +144,7 @@ public class Dispatcher {
         this.elevators.addAll(elevators);
         for (Elevator elevator : elevators) {
             if (elevator.getType().equals(Elevator.Type.floor)) {
-                hElevatorFloor.get(elevator.getCurrentPosition().getFloor()).add(elevator);
+                horiElevatorFloor.get(elevator.getCurrentPosition().getFloor()).add(elevator);
             }
         }
     }
