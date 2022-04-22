@@ -1,26 +1,29 @@
-import com.oocourse.elevator3.PersonRequest;
-
+import java.util.HashSet;
 import java.util.List;
 
 public abstract class PersonQueue {
-    public static final PersonRequest EXIT = new PersonRequest(-1, -1, 'Z', 'Z', -1);
+    public static final RequestList EXIT = new RequestList(-1, -1, 'Z', 'Z', -1);
 
-    public abstract void addRequest(PersonRequest request);
+    public abstract void addRequest(RequestList request);
 
     public abstract void setEnd(boolean end);
 
-    public abstract PersonRequest getFarestRequest(
-            Position currentFloor, Position lastFloor) throws InterruptedException;
+    public abstract RequestList getFarestRequest(
+            Position currentFloor, Position lastFloor,
+            HashSet<Position> reachablePos) throws InterruptedException;
 
-    public abstract PersonRequest getFarestRequestInOut(
-            Position currentFloor, Position lastFloor) throws InterruptedException;
+    public abstract RequestList getFarestRequestInOut(
+            Position currentFloor, Position lastFloor,
+            HashSet<Position> reachablePos) throws InterruptedException;
 
-    public abstract List<PersonRequest> getInPerson(int maxNum,
+    public abstract List<RequestList> getInPerson(int maxNum,
                                                     Position currentPosition,
-                                                    Direction direction);
+                                                    Direction direction,
+                                                  HashSet<Position> reachablePos);
 
     public abstract boolean isEmpty();
 
-    public abstract PersonRequest containSameDirection(Position currentFloor,
-                                                       Direction direction);
+    public abstract RequestList containSameDirection(Position currentFloor,
+                                                       Direction direction,
+                                                     HashSet<Position> reachablePos);
 }

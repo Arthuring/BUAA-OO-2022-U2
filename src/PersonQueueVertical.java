@@ -1,28 +1,27 @@
-import com.oocourse.elevator3.PersonRequest;
-
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 public class PersonQueueVertical extends PersonQueue {
-    private final List<PersonRequest> personRequests;//乘侯表？
-    private final Map<Integer, List<PersonRequest>> requestPerFloor = new HashMap<>();
+    private final List<RequestList> personRequests;//乘侯表？
+    private final Map<Integer, List<RequestList>> requestPerFloor = new HashMap<>();
     //<floor, Queue>
     private boolean end = false;
 
     PersonQueueVertical() {
         personRequests = new ArrayList<>();
         for (int i = 1; i < 11; i++) {
-            List<PersonRequest> r = new ArrayList<>();
+            List<RequestList> r = new ArrayList<>();
             requestPerFloor.put(i, r);
         }
     }
 
-    public synchronized void addRequest(PersonRequest request) {
+    public synchronized void addRequest(RequestList request) {
         personRequests.add(request);
-        requestPerFloor.get(request.getFromFloor()).add(request);
+        requestPerFloor.get(request.nowRequest().getFromFloor()).add(request);
         //System.out.println("person queue add request " + request.toString());
         notifyAll();
     }
@@ -33,8 +32,9 @@ public class PersonQueueVertical extends PersonQueue {
         notifyAll();
     }
 
-    public synchronized PersonRequest getFarestRequest(
-            Position currentFloor, Position lastFloor) throws InterruptedException {
+    public synchronized RequestList getFarestRequest(
+            Position currentFloor, Position lastFloor,
+            HashSet<Position> reachablePos) throws InterruptedException {
         Direction direction = new Direction(currentFloor, lastFloor);
         while (this.personRequests.isEmpty()) {
             if (this.end) {
@@ -50,7 +50,7 @@ public class PersonQueueVertical extends PersonQueue {
         if (direction.getVertical() > 0) {
             for (int i = 10; i >= currentFloor.getFloor(); i--) {
                 Position position = new Position(currentFloor.getBuilding(),i);
-                PersonRequest request = containSameDirection(position, direction);
+                RequestList request = containSameDirection(position, direction,reachablePos);
                 if (request != null) {
                     return request;
                 }
@@ -63,7 +63,7 @@ public class PersonQueueVertical extends PersonQueue {
         } else {
             for (int i = 1; i <= currentFloor.getFloor(); i++) {
                 Position position = new Position(currentFloor.getBuilding(),i);
-                PersonRequest request = containSameDirection(position, direction);
+                RequestList request = containSameDirection(position, direction,reachablePos);
                 if (request != null) {
                     return request;
                 }
@@ -77,8 +77,9 @@ public class PersonQueueVertical extends PersonQueue {
         throw new InterruptedException();
     }
 
-    public synchronized PersonRequest getFarestRequestInOut(
-            Position currentPosition, Position lastPosition) throws InterruptedException {
+    public synchronized RequestList getFarestRequestInOut(
+            Position currentPosition, Position lastPosition,
+            HashSet<Position> reachablePos) throws InterruptedException {
         Direction direction = new Direction(currentPosition,
                 lastPosition);
         if (this.personRequests.isEmpty() && this.end) {
@@ -91,7 +92,7 @@ public class PersonQueueVertical extends PersonQueue {
         if (direction.getVertical() > 0) {
             for (int i = 10; i >= currentPosition.getFloor(); i--) {
                 Position position = new Position(currentPosition.getBuilding(),i);
-                PersonRequest request = containSameDirection(position, direction);
+                RequestList request = containSameDirection(position, direction,reachablePos);
                 if (request != null) {
                     return request;
                 }
@@ -104,7 +105,7 @@ public class PersonQueueVertical extends PersonQueue {
         } else {
             for (int i = 1; i <= currentPosition.getFloor(); i++) {
                 Position position = new Position(currentPosition.getBuilding(),i);
-                PersonRequest request = containSameDirection(position, direction);
+                RequestList request = containSameDirection(position, direction,reachablePos);
                 if (request != null) {
                     return request;
                 }
@@ -118,11 +119,12 @@ public class PersonQueueVertical extends PersonQueue {
         throw new InterruptedException();
     }
 
-    public synchronized List<PersonRequest> getInPerson(int maxNum,
+    public synchronized List<RequestList> getInPerson(int maxNum,
                                                         Position currentFloor,
-                                                        Direction direction) {
+                                                        Direction direction,
+                                                      HashSet<Position> reachablePos) {
         int num = 0;
-        ArrayList<PersonRequest> ans = new ArrayList<>();
+        ArrayList<RequestList> ans = new ArrayList<>();
         if (personRequests.isEmpty()) {
             notifyAll();
             return ans;
@@ -130,13 +132,14 @@ public class PersonQueueVertical extends PersonQueue {
             notifyAll();
             return ans;
         }
-        Iterator<PersonRequest> it = requestPerFloor.get(currentFloor.getFloor()).iterator();
+        Iterator<RequestList> it = requestPerFloor.get(currentFloor.getFloor()).iterator();
         while (it.hasNext()) {
-            PersonRequest r = it.next();
+            RequestList r = it.next();
             if (num >= maxNum) {
                 break;
             }
-            if ((r.getToFloor() - r.getFromFloor()) * direction.getVertical() >= 0) {
+            if ((r.nowRequest().getToFloor() - r.nowRequest().getFromFloor())
+                    * direction.getVertical() >= 0) {
                 num = num + 1;
                 ans.add(r);
                 it.remove();
@@ -151,10 +154,11 @@ public class PersonQueueVertical extends PersonQueue {
         return personRequests.isEmpty();
     }
 
-    public synchronized PersonRequest containSameDirection(Position currentFloor,
-                                                          Direction direction) {
-        for (PersonRequest r : requestPerFloor.get(currentFloor.getFloor())) {
-            int reqDirection = r.getToFloor() - r.getFromFloor();
+    public synchronized RequestList containSameDirection(Position currentFloor,
+                                                          Direction direction,
+                                                         HashSet<Position> reachablePos) {
+        for (RequestList r : requestPerFloor.get(currentFloor.getFloor())) {
+            int reqDirection = r.nowRequest().getToFloor() - r.nowRequest().getFromFloor();
             if (reqDirection * direction.getVertical() >= 0) {
                 return r;
             }

@@ -1,28 +1,29 @@
-import com.oocourse.elevator3.PersonRequest;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 public class PersonQueueHorizontal extends PersonQueue {
-    private final List<PersonRequest> personRequests;//乘侯表？
-    private final Map<Building, List<PersonRequest>> requestPerBuilding = new HashMap<>();
+    private final List<RequestList> personRequests;//乘侯表？
+    private final Map<Building, List<RequestList>> requestPerBuilding = new HashMap<>();
     //<floor, Queue>
     private boolean end = false;
 
     PersonQueueHorizontal() {
         personRequests = new ArrayList<>();
         for (char i = 'A'; i < 'F'; i++) {
-            List<PersonRequest> r = new ArrayList<>();
+            List<RequestList> r = new ArrayList<>();
             requestPerBuilding.put(Building.valueOf(String.valueOf(i)), r);
         }
     }
 
-    public synchronized void addRequest(PersonRequest request) {
+    public synchronized void addRequest(RequestList request) {
         personRequests.add(request);
-        requestPerBuilding.get(Building.toBuilding(request.getFromBuilding())).add(request);
+        requestPerBuilding.get(Building.toBuilding(request.nowRequest().getFromBuilding()))
+                .add(request);
         notifyAll();
     }
 
@@ -32,10 +33,32 @@ public class PersonQueueHorizontal extends PersonQueue {
         notifyAll();
     }
 
-    public synchronized PersonRequest getFarestRequest(
-            Position currentPosition, Position lastPosition) throws InterruptedException {
+    public boolean containReachable(HashSet<Position> reachable) {
+        if (personRequests.isEmpty()) {
+            return false;
+        }
+        if (personRequests.get(0).equals(PersonQueue.EXIT)) {
+            return false;
+        }
+        for (RequestList r : personRequests) {
+            Position from = new Position(Building.toBuilding(r.
+                    nowRequest().getFromBuilding()),
+                    r.nowRequest().getFromFloor());
+            Position to = new Position(Building.toBuilding(r.
+                    nowRequest().getToBuilding()),
+                    r.nowRequest().getToFloor());
+            if (reachable.contains(from) && reachable.contains(to)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public synchronized RequestList getFarestRequest(
+            Position currentPosition, Position lastPosition,
+            HashSet<Position> reachablePos) throws InterruptedException {
         Direction direction = new Direction(currentPosition, lastPosition);
-        while (this.personRequests.isEmpty()) {
+        while (this.personRequests.isEmpty() || !containReachable(reachablePos)) {
             if (this.end) {
                 return EXIT;
             } else {
@@ -49,7 +72,17 @@ public class PersonQueueHorizontal extends PersonQueue {
         Building building = currentPosition.getBuilding();
         do {
             if (!requestPerBuilding.get(building).isEmpty()) {
-                return requestPerBuilding.get(building).get(0);
+                for (RequestList r : requestPerBuilding.get(building)) {
+                    Position from = new Position(Building.toBuilding(r.
+                            nowRequest().getFromBuilding()),
+                            r.nowRequest().getFromFloor());
+                    Position to = new Position(Building.toBuilding(r.
+                            nowRequest().getToBuilding()),
+                            r.nowRequest().getToFloor());
+                    if (reachablePos.contains(from) && reachablePos.contains(to)) {
+                        return r;
+                    }
+                }
             }
             if (direction.getHorizontal() >= 0) {
                 building = Building.nextIncrease(building);
@@ -60,8 +93,9 @@ public class PersonQueueHorizontal extends PersonQueue {
         throw new InterruptedException("NOOO REQUEST ??");
     }
 
-    public synchronized PersonRequest getFarestRequestInOut(
-            Position currentPosition, Position lastPosition) throws InterruptedException {
+    public synchronized RequestList getFarestRequestInOut(
+            Position currentPosition, Position lastPosition,
+            HashSet<Position> reachablePos) throws InterruptedException {
         Direction direction = new Direction(currentPosition, lastPosition);
         if (this.personRequests.isEmpty() && this.end) {
             return EXIT;
@@ -85,26 +119,31 @@ public class PersonQueueHorizontal extends PersonQueue {
         throw new InterruptedException("NOOO REQUEST ??");
     }
 
-    public synchronized List<PersonRequest> getInPerson(int maxNum,
-                                                        Position currentPosition,
-                                                        Direction direction) {
+    public synchronized List<RequestList> getInPerson(int maxNum,
+                                                      Position currentPosition,
+                                                      Direction direction,
+                                                      HashSet<Position> reachablePos) {
         int num = 0;
-        ArrayList<PersonRequest> ans = new ArrayList<>();
+        ArrayList<RequestList> ans = new ArrayList<>();
         if (personRequests.isEmpty()) {
             /*TODO:need notifiy all ?*/
             return ans;
         }
-        Iterator<PersonRequest> it = requestPerBuilding.
+        Iterator<RequestList> it = requestPerBuilding.
                 get(currentPosition.getBuilding()).iterator();
         while (it.hasNext()) {
-            PersonRequest r = it.next();
+            RequestList r = it.next();
             if (num >= maxNum) {
                 break;
             }
-            num = num + 1;
-            ans.add(r);
-            it.remove();
-            personRequests.remove(r);
+            Position toPosition = new Position(Building.toBuilding(r.nowRequest().getToBuilding())
+                    , currentPosition.getFloor());
+            if (reachablePos.contains(toPosition)) {
+                num = num + 1;
+                ans.add(r);
+                it.remove();
+                personRequests.remove(r);
+            }
         }
         /*TODO:need notify all ????*/
         return ans;
@@ -114,10 +153,17 @@ public class PersonQueueHorizontal extends PersonQueue {
         return personRequests.isEmpty();
     }
 
-    public synchronized PersonRequest containSameDirection(Position currentFloor,
-                                                           Direction direction) {
-        for (PersonRequest r : requestPerBuilding.get(currentFloor.getBuilding())) {
-            return r;
+    public synchronized RequestList containSameDirection(Position currentPosition,
+                                                         Direction direction,
+                                                         HashSet<Position> reachablePos) {
+        if (reachablePos.contains(currentPosition)) {
+            for (RequestList r : requestPerBuilding.get(currentPosition.getBuilding())) {
+                Position toPosition = new Position(Building.toBuilding(r.nowRequest()
+                        .getToBuilding()), currentPosition.getFloor());
+                if (reachablePos.contains(toPosition)) {
+                    return r;
+                }
+            }
         }
         return null;
     }
