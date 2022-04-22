@@ -43,7 +43,6 @@ public class InstructionListener extends Thread {
             for (int i = 0; i < requestNum; ++i) {
                 RequestCounter.getInstance().acquire();
             }
-            System.out.println("All request end");
             Dispatcher.getInstance().setEnd(true);
         } catch (Exception e) {
             System.out.println(e);

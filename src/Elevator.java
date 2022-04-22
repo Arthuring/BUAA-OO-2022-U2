@@ -93,7 +93,6 @@ public class Elevator extends Thread {
                             elevator.currentPosition.getFloor() +
                             "-" + elevator.id;
                     OutputThread.println(out);
-                    System.out.println(out);
                     elevator.direction = new Direction(elevator.currentPosition,
                             elevator.lastPosition);
                     //判断一下这层有没有要下车的乘客，有的话开门
@@ -163,7 +162,6 @@ public class Elevator extends Thread {
                             elevator.currentPosition.getFloor() +
                             "-" + elevator.id;
                     OutputThread.println(out);
-                    System.out.println(out);
                     elevator.direction = new Direction(elevator.currentPosition,
                             elevator.lastPosition);
                     if (elevator.reachablePostion.contains(elevator.currentPosition)) {
@@ -218,7 +216,6 @@ public class Elevator extends Thread {
                         "-" + elevator.currentPosition.getFloor() + "-" + elevator.id;
                 //elevator.outPutStream.putString(out);
                 OutputThread.println(out);
-                System.out.println(out);
                 elevator.passengerOut(elevator);
                 sleep(400);
                 ///////////////////////////////////////////////
@@ -236,7 +233,6 @@ public class Elevator extends Thread {
                         "-" + elevator.currentPosition.getFloor() + "-" + elevator.id;
                 //elevator.outPutStream.putString(close);
                 OutputThread.println(close);
-                System.out.println(close);
                 if (elevator.strategy instanceof LookStrategyVertical) {
                     sleep(elevator.speed);
                 } else if (elevator.strategy instanceof LookStrategyHorizontal) {
@@ -370,7 +366,7 @@ public class Elevator extends Thread {
                 try {
                     status.handle(this, this.target);
                 } catch (InterruptedException e) {
-                    System.out.println("Elevator" + this.id + " End");
+                    //System.out.println("Elevator" + this.id + " End");
                     //outPutStream.setEnd();
                     break;
                 }
@@ -392,7 +388,6 @@ public class Elevator extends Thread {
                         "-" + elevator.currentPosition.getFloor() + "-" + elevator.id + "";
                 //this.outPutStream.putString(out);
                 OutputThread.println(out);
-                System.out.println(out);
                 it.remove();
                 if (r.hasNext()) {
                     Dispatcher.getInstance().addPersonRequest(r);
@@ -414,7 +409,6 @@ public class Elevator extends Thread {
                     "-" + elevator.currentPosition.getFloor() + "-" + elevator.id + "";
             //elevator.outPutStream.putString(out);
             OutputThread.println(out);
-            System.out.println(out);
             inside.add(r);
         }
     }

@@ -12,7 +12,7 @@ public class RequestCounter {
 
     public synchronized void release() {
         requestCount = requestCount + 1;
-        System.out.println("release:" + requestCount);
+        //System.out.println("release:" + requestCount);
         notifyAll();
     }
 
@@ -20,7 +20,7 @@ public class RequestCounter {
         while (true) {
             if (requestCount > 0) {
                 requestCount -= 1;
-                System.out.println("acquire:" + requestCount);
+                //System.out.println("acquire:" + requestCount);
                 break;
             } else {
                 try {

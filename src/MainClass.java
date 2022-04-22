@@ -5,8 +5,6 @@ import java.util.ArrayList;
 public class MainClass {
     public static void main(String[] args) throws Exception {
         TimableOutput.initStartTimestamp();
-        InstructionListener instructionListener = new InstructionListener();
-        instructionListener.start();
         ArrayList<Elevator> elevatorsList = new ArrayList<>();
         for (int i = 0; i < 5; i++) {
             char building = (char) ('A' + i);
@@ -23,5 +21,7 @@ public class MainClass {
         for (int i = 0; i < 6; i++) {
             elevatorsList.get(i).start();
         }
+        InstructionListener instructionListener = new InstructionListener();
+        instructionListener.start();
     }
 }
