@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 /*TODO: Make this class a single example mode!*/
 public class Dispatcher {
@@ -63,12 +64,19 @@ public class Dispatcher {
             //System.out.println(requestList);
         } else {
             int distant = 22;
+            int sameNum = 1;
             for (int i = 1; i < 11; i++) {
                 if (canReachInFloor(i, formBuilding, toBuilding)) {
                     int temp = Math.abs(fromFloor - i) + Math.abs(toFloor - i);
                     if (temp < distant) {
                         distant = temp;
                         midFloor = i;
+                    } else if (temp == distant) {
+                        sameNum += 1;
+                        int random = new Random().nextInt();
+                        if (random % sameNum == 0) {
+                            midFloor = i;
+                        }
                     }
                 }
             }
